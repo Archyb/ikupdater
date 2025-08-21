@@ -1,0 +1,41 @@
+{
+  "name": "ikdev-updater",
+  "version": "0.1.0",
+  "description": "Electron app to update multiple dev projects (git/composer/npm|yarn)",
+  "main": "src/main/main.js",
+  "scripts": {
+    "dev": "ELECTRON_DISABLE_SECURITY_WARNINGS=1 electron .",
+    "start": "electron .",
+    "dist": "electron-builder -m",
+    "tw:build": "tailwindcss -i src/renderer/tailwind.css -o src/renderer/tw.css -m"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17"
+  },
+  "build": {
+    "appId": "com.ikdev.updater",
+    "productName": "IkDevUpdater",
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.developer-tools"
+    },
+    "dmg": {
+      "artifactName": "${productName}-${version}-${arch}.dmg"
+    },
+    "directories": {
+      "output": "dist"
+    }
+  }
+}

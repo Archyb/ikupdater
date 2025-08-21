@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self';" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>IkDevUpdater</title>
+    <link rel="stylesheet" href="tw.css" />
+  </head>
+  <body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased">
+    <!-- Header -->
+    <header class="app-header sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/70 supports-[backdrop-filter]:dark:bg-slate-900/60 border-b border-slate-200/70 dark:border-slate-800">
+      <h1 id="appTitle" class="brand-title tracking-tight">IkDevUpdater</h1>
+
+      <div class="ml-auto flex items-center gap-2">
+        <button id="chooseFolder" class="btn btn-ghost">Choose projects folder</button>
+        <span id="baseDir" class="muted truncate max-w-[40ch]"></span>
+      </div>
+    </header>
+
+    <!-- Toolbar 1 -->
+    <section class="controls">
+      <div class="control-row justify-between">
+        <div class="flex items-center gap-2">
+          <label for="themePicker" class="label">Thème</label>
+          <select id="themePicker" class="field">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Toolbar 2 -->
+    <section class="controls">
+      <div class="control-row justify-between flex-wrap gap-4">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="label">Bulk actions</span>
+
+          <!-- checkboxes stylisés façon pill -->
+          <label class="pill">
+            <input type="checkbox" id="bulkGit" class="pill-input" checked>
+            <span class="pill-label">Git</span>
+          </label>
+
+          <label class="pill">
+            <input type="checkbox" id="bulkPhp" class="pill-input" checked>
+            <span class="pill-label">PHP</span>
+          </label>
+
+          <label class="pill">
+            <input type="checkbox" id="bulkNode" class="pill-input" checked>
+            <span class="pill-label">Node</span>
+          </label>
+        </div>
+
+        <div class="actions">
+          <button id="runSelected" class="btn btn-primary" data-action="sync">Run on selected</button>
+          <button id="selectAll" class="btn">Select all</button>
+          <button id="clearSelection" class="btn btn-ghost">Clear selection</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Grid projets -->
+    <main class="px-6 py-6">
+      <div id="projects" class="grid"></div>
+    </main>
+
+
+
+    <script src="renderer.js"></script>
+  </body>
+</html>
