@@ -44,9 +44,9 @@
 
 	/* Emphasize Sync and colorize actions */
 	.card-actions button[data-action='sync'] { @apply bg-blue-500 text-white border-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:border-blue-600 dark:hover:bg-blue-700; }
-	.card-actions button[data-action='git'] { @apply border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/20; }
-	.card-actions button[data-action='php'] { @apply border-purple-400 text-purple-600 hover:bg-purple-50 dark:border-purple-400 dark:text-purple-400 dark:hover:bg-purple-900/20; }
-	.card-actions button[data-action='node'] { @apply border-green-400 text-green-600 hover:bg-green-50 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20; }
+	.card-actions button[data-action='git'] { @apply border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/20 px-2 py-1 text-sm; }
+	.card-actions button[data-action='php'] { @apply border-purple-400 text-purple-600 hover:bg-purple-50 dark:border-purple-400 dark:text-purple-400 dark:hover:bg-purple-900/20 px-2 py-1 text-sm; }
+	.card-actions button[data-action='node'] { @apply border-green-400 text-green-600 hover:bg-green-50 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20 px-2 py-1 text-sm; }
 
 	/* Button defaults in header and action zones */
 	header button { @apply btn; }
