@@ -11,7 +11,7 @@ An Electron application for managing and synchronizing development projects with
 
 ### 🔧 **Git Operations**
 - **Safe Git synchronization** with configurable strategies per project:
-  - **Pull Strategy**: `git fetch --all --prune` → `git checkout <branch>` → `git merge --ff-only origin/<branch>`
+  - **Pull Strategy**: `git fetch --all --prune` → `git checkout <branch>` → `git pull origin <branch>`
   - **Rebase Strategy**: `git fetch --all --prune` → `git checkout <branch>` → `git rebase origin/<branch>`
 - **Branch selection** via dropdown populated with available Git branches
 - **Non-interactive operations** (SSH prompts disabled for automation)
@@ -139,13 +139,13 @@ Generated in `dist/` directory:
 
 ### Non-Destructive Operations
 - **No automatic rebasing** without explicit user choice
-- **No forced merges** - only fast-forward merges allowed
+- **Standard Git operations** - uses `git pull` (merge) or `git rebase` based on user preference
 - **Safe checkout** - always fetches latest before operations
 - **Conflict handling** - operations fail gracefully if conflicts detected
 
 ### Strategy Options
-- **Pull Strategy**: Traditional merge approach, safer for shared branches
-- **Rebase Strategy**: Cleaner history, but requires careful conflict resolution
+- **Pull Strategy**: Traditional merge approach using `git pull origin <branch>`, safer for shared branches
+- **Rebase Strategy**: Cleaner history using `git rebase origin/<branch>`, but requires careful conflict resolution
 
 ## Troubleshooting
 
