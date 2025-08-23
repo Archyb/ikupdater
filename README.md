@@ -1,71 +1,176 @@
-# Updater
+# IkDevUpdater
 
-Application Electron pour synchroniser et installer rapidement des projets (Git, Composer, Yarn/NPM) dans un même dossier parent.
+An Electron application for managing and synchronizing development projects with an elegant visual interface. Automatically detects PHP and Node/TypeScript projects and provides tools for Git operations, dependency installation, and project management.
 
-## Fonctionnalités
+## Features
 
-- Détection des projets via `composer.json` et/ou `package.json`
-- Détection de techno: PHP (Composer), Node/TypeScript (NPM/Yarn)
-- Sélection de branche par projet via une liste déroulante (branches Git détectées)
-- Synchronisation Git sûre: `fetch --all --prune` + `merge --ff-only origin/<branche>` (pas de rebase/pull/merge commit)
-- Actions par projet: Git, PHP (Composer), Node (Yarn/NPM), ou Sync (tout enchaîner)
-- `nvm use` automatique si `.nvmrc` présent (bonne version de Node)
-- Vérification PHP ≥ 7.3 avant Composer (sinon, Composer est ignoré avec un message clair)
-- Actions groupées (Git/PHP/Node) avec inclusion/exclusion par projet
-- Logs en direct par projet + console globale
-- Préférences persistées: dossier parent, inclusion et branche par projet
+### 🚀 **Project Detection**
+- **Automatic scanning** of user-selected directories for development projects
+- **Technology detection**: PHP (via `composer.json`), Node/TypeScript (via `package.json`)
+- **Smart identification** of package managers (npm vs yarn based on `yarn.lock` presence)
 
-## Prérequis
+### 🔧 **Git Operations**
+- **Safe Git synchronization** with configurable strategies per project:
+  - **Pull Strategy**: `git fetch --all --prune` → `git checkout <branch>` → `git merge --ff-only origin/<branch>`
+  - **Rebase Strategy**: `git fetch --all --prune` → `git checkout <branch>` → `git rebase origin/<branch>`
+- **Branch selection** via dropdown populated with available Git branches
+- **Non-interactive operations** (SSH prompts disabled for automation)
+- **Repository safety** - no destructive operations, no forced merges
 
-- macOS
-- Node.js + npm/yarn
-- nvm installé dans `$HOME/.nvm` si vous utilisez `.nvmrc`
-- PHP installé (≥ 7.3 recommandé pour Composer)
-- Git installé et accès SSH configuré
+### 📦 **Dependency Management**
+- **PHP Projects**: 
+  - Runs `composer install --ignore-platform-reqs`
+  - **PHP version check**: Minimum 7.3 required (skips if version < 7.3)
+- **Node/TypeScript Projects**:
+  - Automatically detects `yarn.lock` vs `package-lock.json`
+  - Runs `npm install --loglevel info` or `yarn install --verbose`
+  - **NVM integration**: Automatically runs `nvm use` if `.nvmrc` file is present
 
-## Démarrer en développement
+### 🎨 **User Interface**
+- **Elegant visual design** with modern UI components
+- **Dark/Light theme** with persistent user preference
+- **Brand styling**: "IkDevUpdater" title with custom brand color (#0098ff)
+- **Project cards** displaying:
+  - Project name, path, and detected technologies
+  - Include/exclude checkbox for bulk operations
+  - Branch selector dropdown
+  - Git strategy selector (Pull/Rebase)
+  - Individual action buttons (Git, PHP, Node, Sync)
+  - Real-time logs for each project
 
+### ⚡ **Bulk Operations**
+- **Selective automation**: Include/exclude specific projects from bulk operations
+- **Bulk actions**: Run Git, PHP, or Node operations on multiple projects simultaneously
+- **Global console**: Aggregated logs from all operations
+
+### 💾 **Configuration & Persistence**
+- **Base directory** selection saved across sessions
+- **Per-project settings**:
+  - Include/exclude status
+  - Preferred Git branch
+  - Git strategy preference (Pull/Rebase)
+- **Theme preference** (Dark/Light)
+- **Settings stored** in Electron's `userData` directory
+
+## Prerequisites
+
+- **macOS** (primary target platform)
+- **Node.js** (latest LTS version recommended)
+- **npm** or **yarn** package manager
+- **nvm** (Node Version Manager) installed in `$HOME/.nvm` for `.nvmrc` support
+- **PHP** ≥ 7.3 (for Composer operations)
+- **Git** with SSH access configured
+- **Composer** (for PHP projects)
+
+## Development
+
+### Installation
 ```bash
 npm install
+```
+
+### Start Development Server
+```bash
 npm run start
 ```
 
-## Build macOS (.app / .dmg)
+### Build Tailwind CSS
+```bash
+npm run tw:build
+```
 
+## Building for Distribution
+
+### Create macOS Executable
 ```bash
 npm run dist
 ```
 
-Sorties dans `dist/`:
-- `Updater-<version>-arm64.dmg`
-- `Updater-<version>-arm64-mac.zip`
+### Build Outputs
+Generated in `dist/` directory:
+- `IkDevUpdater-<version>-arm64.dmg` - macOS installer
+- `IkDevUpdater-<version>-arm64-mac.zip` - macOS application bundle
 
-Sans certificat macOS, l’app n’est pas signée (Gatekeeper peut prévenir). Ajoutez une signature via electron-builder si nécessaire.
+**Note**: Without macOS developer certificate, the app won't be code-signed. Gatekeeper may show warnings. Add proper signing via electron-builder configuration if needed.
 
-## Utilisation
+## Usage
 
-1. Ouvrez l’app, choisissez le dossier parent contenant vos projets
-2. Ajustez "Inclure" et la branche par projet
-3. Lancez des actions par projet ou les actions groupées
-4. Surveillez les logs (carte du projet et console globale)
+### Getting Started
+1. **Launch** the application
+2. **Select** the base directory containing your development projects
+3. **Review** detected projects and their technologies
+4. **Configure** per-project settings:
+   - Check/uncheck "Include" for bulk operations
+   - Select preferred Git branch from dropdown
+   - Choose Git strategy (Pull or Rebase)
+5. **Execute** actions:
+   - **Individual**: Click Git, PHP, Node, or Sync buttons per project
+   - **Bulk**: Use bulk action buttons to process multiple projects
+
+### Action Details
+- **Git**: Fetches latest changes and updates to selected branch
+- **PHP**: Installs Composer dependencies (if PHP ≥ 7.3)
+- **Node**: Installs npm/yarn dependencies with NVM version management
+- **Sync**: Executes Git → PHP → Node sequence for complete project update
+
+### Monitoring
+- **Per-project logs**: Real-time output displayed below each project card
+- **Global console**: Aggregated logs from all operations at bottom of interface
+- **Theme switching**: Toggle between dark and light themes via dropdown
 
 ## Architecture
 
-- `src/main/main.js`: processus principal (fenêtre, IPC, orchestration)
-- `src/main/config.js`: configuration persistée (JSON dans `userData`)
-- `src/main/exec.js`: exécution des commandes (stdout/stderr en streaming)
-- `src/main/git.js`: opérations Git (branches, fetch)
-- `src/preload.js`: pont sécurisé (API exposée au renderer)
-- `src/renderer/*`: UI (HTML/CSS/JS), scan, actions, affichage des logs
+### Main Process (`src/main/`)
+- **`main.js`**: Main Electron process, window management, IPC orchestration
+- **`config.js`**: Configuration management and persistence
+- **`exec.js`**: Command execution utilities and output streaming
+- **`git.js`**: Git-specific operations and branch management
 
-## Sécurité Git
+### Renderer Process (`src/renderer/`)
+- **`index.html`**: Main UI structure and layout
+- **`renderer.js`**: UI logic, event handling, and project rendering
+- **`tailwind.css`**: Tailwind CSS components and custom styling
 
-- Pas de rebase automatique, pas de merge non-FF, pas de `git pull`
-- Mise à jour: `fetch --all --prune` puis `checkout` + `merge --ff-only`
-- En cas de divergence, l’opération échoue sans modifier l’historique
+### Preload (`src/preload.js`)
+- **Secure API bridge** between main and renderer processes
+- **Exposed functions**: `selectFolder`, `scanProjects`, `executeAction`, `getBranches`, etc.
 
-## Dépannage
+## Git Safety Features
 
-- nvm non détecté: vérifiez `~/.nvm/nvm.sh`
-- PHP trop ancien (< 7.3): mettez à jour PHP pour Composer
-- SSH prompt: désactivé pour éviter les blocages (dev uniquement)
+### Non-Destructive Operations
+- **No automatic rebasing** without explicit user choice
+- **No forced merges** - only fast-forward merges allowed
+- **Safe checkout** - always fetches latest before operations
+- **Conflict handling** - operations fail gracefully if conflicts detected
+
+### Strategy Options
+- **Pull Strategy**: Traditional merge approach, safer for shared branches
+- **Rebase Strategy**: Cleaner history, but requires careful conflict resolution
+
+## Troubleshooting
+
+### Common Issues
+- **nvm not detected**: Ensure `~/.nvm/nvm.sh` is properly sourced
+- **PHP version too old**: Update PHP to ≥ 7.3 for Composer support
+- **SSH prompts**: Disabled for automation (development environment only)
+- **Git conflicts**: Operations will fail safely - resolve conflicts manually
+
+### Performance Tips
+- **Large repositories**: Git operations may take time on first fetch
+- **Many projects**: Bulk operations process projects sequentially for stability
+- **Log monitoring**: Use global console for overview, project logs for details
+
+## Development Notes
+
+### Styling
+- **Tailwind CSS**: Utility-first CSS framework for rapid UI development
+- **Custom components**: Brand-specific styling with CSS variables
+- **Responsive design**: Adapts to different screen sizes and themes
+
+### Configuration
+- **Settings file**: Stored in `~/Library/Application Support/IkDevUpdater/config.json`
+- **Backup**: Configuration can be manually backed up and restored
+
+## License
+
+This project is developed for internal development workflow management.

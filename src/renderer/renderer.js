@@ -112,18 +112,18 @@ function renderProjects() {
           <div class="subtitle">${proj.techs.join(', ')}</div>
           <div class="path">${proj.path}</div>
         </div>
-        <div class="actions">
-          <label class="inc"><input type="checkbox" class="include" ${projCfg.include ? 'checked' : ''}/> Include</label>
-          <select class="branch" title="Branch"><option>${projCfg.branch || 'develop'}</option></select>
-          <select class="git-strategy" title="Git Strategy">
-            <option value="pull" ${projCfg.gitStrategy === 'rebase' ? '' : 'selected'}>Pull</option>
-            <option value="rebase" ${projCfg.gitStrategy === 'rebase' ? 'selected' : ''}>Rebase</option>
-          </select>
-          <button data-action="git">Git</button>
-          <button data-action="php" ${proj.techs.includes('php') ? '' : 'disabled'}>PHP</button>
-          <button data-action="node" ${proj.techs.some(t => t === 'node' || t === 'ts') ? '' : 'disabled'}>Node</button>
-          <button data-action="sync">Sync</button>
-        </div>
+      </div>
+      <div class="card-actions">
+        <label class="inc"><input type="checkbox" class="include" ${projCfg.include ? 'checked' : ''}/> Include</label>
+        <select class="branch" title="Branch"><option>${projCfg.branch || 'develop'}</option></select>
+        <select class="git-strategy" title="Git Strategy">
+          <option value="pull" ${projCfg.gitStrategy === 'rebase' ? '' : 'selected'}>Pull</option>
+          <option value="rebase" ${projCfg.gitStrategy === 'rebase' ? 'selected' : ''}>Rebase</option>
+        </select>
+        <button data-action="git">Git</button>
+        <button data-action="php" ${proj.techs.includes('php') ? '' : 'disabled'}>PHP</button>
+        <button data-action="node" ${proj.techs.some(t => t === 'node' || t === 'ts') ? '' : 'disabled'}>Node</button>
+        <button data-action="sync">Sync</button>
       </div>
       <pre class="log" id="log-${cssEscape(proj.path)}"></pre>
     `;
@@ -131,7 +131,7 @@ function renderProjects() {
     projectsEl.appendChild(card);
 
     // Actions: git / php / node / sync
-    const buttons = card.querySelectorAll('button[data-action]');
+    const buttons = card.querySelectorAll('.card-actions button[data-action]');
     buttons.forEach(btn => {
       btn.addEventListener('click', async () => {
         btn.disabled = true;
