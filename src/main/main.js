@@ -111,16 +111,25 @@ ipcMain.handle('save-config', async (_event, next) => {
 	return { ok: true };
 });
 
-ipcMain.handle('execute-action', async (_event, { projectPath, action, branch }) => {
+ipcMain.handle('execute-action', async (_event, { projectPath, action, branch, gitStrategy }) => {
 	if (!projectPath || !action) return { ok: false, error: 'invalid-args' };
 	const sequence = [];
 	// Determine branch: explicit -> config -> default
 	const cfg = getConfig();
 	const projectCfg = (cfg.projects && cfg.projects[projectPath]) || {};
 	const targetBranch = branch || projectCfg.branch || 'develop';
-
+	const strategy = gitStrategy || 'pull';
+	
+	// Always fetch, then checkout branch, then apply chosen strategy
+	sequence.push({ cmd: 'git', args: ['fetch', '--all', '--prune'] });
 	sequence.push({ cmd: 'git', args: ['checkout', targetBranch] });
-	sequence.push({ cmd: 'git', args: ['pull'] });
+	
+	if (strategy === 'rebase') {
+		sequence.push({ cmd: 'git', args: ['rebase', `origin/${targetBranch}`] });
+	} else {
+		// Default to pull (merge)
+		sequence.push({ cmd: 'git', args: ['pull', 'origin', targetBranch] });
+	}
 
 	if (action === 'node' || action === 'sync') {
 		const useYarn = fs.existsSync(path.join(projectPath, 'yarn.lock'));

@@ -20,14 +20,17 @@
 
     <!-- Toolbar 1 -->
     <section class="controls">
-      <div class="control-row justify-between">
-        <div class="flex items-center gap-2">
-          <label for="themePicker" class="label">Thème</label>
-          <select id="themePicker" class="field">
-            <option value="dark">Dark</option>
-            <option value="light">Light</option>
-          </select>
-        </div>
+      <div class="control-row">
+        <label class="label">Theme:</label>
+        <select id="themePicker" class="branch">
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+        </select>
+        <label class="label ml-6">Git strategy:</label>
+        <select id="gitStrategy" class="branch">
+          <option value="pull">Pull (merge)</option>
+          <option value="rebase">Rebase</option>
+        </select>
       </div>
     </section>
 
