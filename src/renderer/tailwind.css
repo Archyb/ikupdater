@@ -37,6 +37,7 @@
 	.path { @apply text-xs text-gray-500; }
 	.actions { @apply flex gap-3 items-center flex-wrap; }
 	.branch { @apply w-44 px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100; }
+	.git-strategy { @apply w-32 px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100; }
 	.log { @apply m-0 p-4 h-48 overflow-auto bg-gray-50 dark:bg-slate-900 text-gray-800 dark:text-indigo-100 font-mono text-sm border-t border-gray-200 dark:border-slate-700; }
 	.console { @apply px-8 py-4; }
 	.console h2 { @apply m-0 mb-3 text-base font-medium text-gray-600; }

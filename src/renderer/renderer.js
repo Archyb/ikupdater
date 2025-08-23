@@ -12,7 +12,6 @@ const runSelectedBtn = document.getElementById('runSelected');
 const selectAllBtn = document.getElementById('selectAll');
 const clearSelectionBtn = document.getElementById('clearSelection');
 const themePicker = document.getElementById('themePicker');
-const gitStrategy = document.getElementById('gitStrategy');
 
 // Etat local UI
 let projectList = [];
@@ -60,19 +59,13 @@ function cssEscape(id) {
   return id.replace(/[^a-zA-Z0-9_-]/g, '_');
 }
 
+// Initialise des valeurs par défaut pour chaque projet
 function ensureProjectSettings() {
-  for (const proj of projectList) {
-    if (!settings.projects[proj.path]) {
-      settings.projects[proj.path] = { include: true, branch: 'develop' };
-    } else {
-      // garde une branche par défaut si absente
-      settings.projects[proj.path].branch ||= 'develop';
-      // inclure par défaut si non défini
-      if (typeof settings.projects[proj.path].include !== 'boolean') {
-        settings.projects[proj.path].include = true;
-      }
-    }
-  }
+	for (const proj of projectList) {
+		if (!settings.projects[proj.path]) {
+			settings.projects[proj.path] = { include: true, branch: 'develop', gitStrategy: 'pull' };
+		}
+	}
 }
 
 function capabilityFromTechs(techs = []) {
@@ -116,26 +109,23 @@ function renderProjects() {
       <div class="card-header">
         <div>
           <div class="title">${proj.name}</div>
-          <div class="subtitle">${proj.techs.join(', ') || '—'}</div>
+          <div class="subtitle">${proj.techs.join(', ')}</div>
           <div class="path">${proj.path}</div>
         </div>
         <div class="actions">
-          <label class="pill">
-            <input type="checkbox" class="pill-input include" ${projCfg.include ? 'checked' : ''} aria-label="Inclure le projet ${proj.name}" />
-            <span class="pill-label">Include</span>
-          </label>
-
-          <select class="branch" title="Branche" aria-label="Branche">
-            <option>${projCfg.branch || 'develop'}</option>
+          <label class="inc"><input type="checkbox" class="include" ${projCfg.include ? 'checked' : ''}/> Include</label>
+          <select class="branch" title="Branch"><option>${projCfg.branch || 'develop'}</option></select>
+          <select class="git-strategy" title="Git Strategy">
+            <option value="pull" ${projCfg.gitStrategy === 'rebase' ? '' : 'selected'}>Pull</option>
+            <option value="rebase" ${projCfg.gitStrategy === 'rebase' ? 'selected' : ''}>Rebase</option>
           </select>
-
-          <button data-action="git"  class="btn" ${caps.hasGit ? '' : 'disabled title="Git non disponible"'}>Git</button>
-          <button data-action="php"  class="btn" ${caps.hasPhp ? '' : 'disabled'} title="${caps.hasPhp ? 'Exécuter scripts PHP' : 'PHP non détecté dans ce projet'}">PHP</button>
-          <button data-action="node" class="btn" ${caps.hasNode ? '' : 'disabled'} title="${caps.hasNode ? 'Exécuter scripts Node' : 'Node/TS non détecté dans ce projet'}">Node</button>
-          <button data-action="sync" class="btn btn-primary">Sync</button>
+          <button data-action="git">Git</button>
+          <button data-action="php" ${proj.techs.includes('php') ? '' : 'disabled'}>PHP</button>
+          <button data-action="node" ${proj.techs.some(t => t === 'node' || t === 'ts') ? '' : 'disabled'}>Node</button>
+          <button data-action="sync">Sync</button>
         </div>
       </div>
-      <pre class="log" id="log-${idSafe}" aria-live="polite"></pre>
+      <pre class="log" id="log-${cssEscape(proj.path)}"></pre>
     `;
 
     projectsEl.appendChild(card);
@@ -147,8 +137,8 @@ function renderProjects() {
         btn.disabled = true;
         try {
           const branch = (settings.projects[proj.path] && settings.projects[proj.path].branch) || 'develop';
-          const strategy = gitStrategy ? gitStrategy.value : 'pull';
-          await window.api.executeAction({ projectPath: proj.path, action: btn.dataset.action, branch, gitStrategy: strategy });
+          const gitStrategy = (settings.projects[proj.path] && settings.projects[proj.path].gitStrategy) || 'pull';
+          await window.api.executeAction({ projectPath: proj.path, action: btn.dataset.action, branch, gitStrategy });
         } finally {
           btn.disabled = false;
         }
@@ -170,6 +160,13 @@ function renderProjects() {
     branchEl.addEventListener('change', () => {
       settings.projects[proj.path] = settings.projects[proj.path] || {};
       settings.projects[proj.path].branch = branchEl.value || 'develop';
+      saveSettings();
+    });
+
+    const gitStrategyEl = card.querySelector('.git-strategy');
+    gitStrategyEl.addEventListener('change', () => {
+      settings.projects[proj.path] = settings.projects[proj.path] || {};
+      settings.projects[proj.path].gitStrategy = gitStrategyEl.value;
       saveSettings();
     });
   }
@@ -297,13 +294,12 @@ runSelectedBtn.addEventListener('click', async () => {
 	const doGit = bulkGitEl.checked;
 	const doPhp = bulkPhpEl.checked;
 	const doNode = bulkNodeEl.checked;
-	const strategy = gitStrategy ? gitStrategy.value : 'pull';
 	for (const proj of projectList) {
-		const cfg = settings.projects[proj.path] || { include: true, branch: 'develop' };
+		const cfg = settings.projects[proj.path] || { include: true, branch: 'develop', gitStrategy: 'pull' };
 		if (!cfg.include) continue;
-		if (doGit) await window.api.executeAction({ projectPath: proj.path, action: 'git', branch: cfg.branch, gitStrategy: strategy });
-		if (doPhp && proj.techs.includes('php')) await window.api.executeAction({ projectPath: proj.path, action: 'php', branch: cfg.branch, gitStrategy: strategy });
-		if (doNode && proj.techs.some(t => t === 'node' || t === 'ts')) await window.api.executeAction({ projectPath: proj.path, action: 'node', branch: cfg.branch, gitStrategy: strategy });
+		if (doGit) await window.api.executeAction({ projectPath: proj.path, action: 'git', branch: cfg.branch, gitStrategy: cfg.gitStrategy });
+		if (doPhp && proj.techs.includes('php')) await window.api.executeAction({ projectPath: proj.path, action: 'php', branch: cfg.branch, gitStrategy: cfg.gitStrategy });
+		if (doNode && proj.techs.some(t => t === 'node' || t === 'ts')) await window.api.executeAction({ projectPath: proj.path, action: 'node', branch: cfg.branch, gitStrategy: cfg.gitStrategy });
 	}
 });
 
