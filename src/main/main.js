@@ -118,10 +118,9 @@ ipcMain.handle('execute-action', async (_event, { projectPath, action, branch })
 	const cfg = getConfig();
 	const projectCfg = (cfg.projects && cfg.projects[projectPath]) || {};
 	const targetBranch = branch || projectCfg.branch || 'develop';
-	// Always fetch, then checkout branch, then fast-forward only merge from origin
-	sequence.push({ cmd: 'git', args: ['fetch', '--all', '--prune'] });
+
 	sequence.push({ cmd: 'git', args: ['checkout', targetBranch] });
-	sequence.push({ cmd: 'git', args: ['merge', '--ff-only', `origin/${targetBranch}`] });
+	sequence.push({ cmd: 'git', args: ['pull'] });
 
 	if (action === 'node' || action === 'sync') {
 		const useYarn = fs.existsSync(path.join(projectPath, 'yarn.lock'));
