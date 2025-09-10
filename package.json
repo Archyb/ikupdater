@@ -2,25 +2,32 @@
   "name": "ikdev-updater",
   "version": "0.1.0",
   "description": "Electron app to update multiple dev projects (git/composer/npm|yarn)",
-  "main": "src/main/main.js",
+  "main": "dist/main/main.js",
   "scripts": {
-    "dev": "ELECTRON_DISABLE_SECURITY_WARNINGS=1 electron .",
-    "start": "electron .",
-    "dist": "electron-builder -m",
-    "tw:build": "tailwindcss -i src/renderer/tailwind.css -o src/renderer/tw.css -m"
+    "dev": "npm run build && ELECTRON_DISABLE_SECURITY_WARNINGS=1 electron .",
+    "start": "npm run build && electron .",
+    "build": "node scripts/build.js",
+    "build:watch": "tsc --watch --project tsconfig.build.json",
+    "dist": "npm run build && electron-builder -m",
+    "tw:build": "tailwindcss -i src/renderer/tailwind.css -o src/renderer/tw.css -m",
+    "clean": "rm -rf dist",
+    "type-check": "tsc --noEmit"
   },
   "devDependencies": {
+    "@types/node": "^20.10.0",
     "autoprefixer": "^10.4.21",
     "electron": "^31.0.0",
     "electron-builder": "^24.13.3",
     "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.3.0"
   },
   "build": {
     "appId": "com.ikdev.updater",
     "productName": "IkDevUpdater",
     "files": [
-      "src/**/*",
+      "dist/**/*",
+      "src/renderer/**/*",
       "package.json"
     ],
     "asar": true,
