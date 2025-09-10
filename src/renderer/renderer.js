@@ -12,6 +12,14 @@ const runSelectedBtn = document.getElementById('runSelected');
 const selectAllBtn = document.getElementById('selectAll');
 const clearSelectionBtn = document.getElementById('clearSelection');
 const themePicker = document.getElementById('themePicker');
+const toggleConsoleBtn = document.getElementById('toggleConsole');
+const clearConsoleBtn = document.getElementById('clearConsole');
+const scrollToBottomBtn = document.getElementById('scrollToBottom');
+const stopProcessBtn = document.getElementById('stopProcess');
+
+// Version display elements
+const phpVersionEl = document.getElementById('php-version');
+const nodeVersionEl = document.getElementById('node-version');
 
 // Etat local UI
 let projectList = [];
@@ -120,12 +128,11 @@ function renderProjects() {
           <option value="pull" ${projCfg.gitStrategy === 'rebase' ? '' : 'selected'}>Pull</option>
           <option value="rebase" ${projCfg.gitStrategy === 'rebase' ? 'selected' : ''}>Rebase</option>
         </select>
-        <button data-action="git">Git</button>
-        <button data-action="php" ${proj.techs.includes('php') ? '' : 'disabled'}>PHP</button>
-        <button data-action="node" ${proj.techs.some(t => t === 'node' || t === 'ts') ? '' : 'disabled'}>Node</button>
-        <button data-action="sync">Sync</button>
+        <button data-action="git" title="Update Git repository (fetch, checkout, pull/rebase)">Git</button>
+        <button data-action="php" ${proj.techs.includes('php') ? '' : 'disabled'} title="Install PHP dependencies with Composer">PHP</button>
+        <button data-action="node" ${proj.techs.some(t => t === 'node' || t === 'ts') ? '' : 'disabled'} title="Install Node.js dependencies with npm/yarn">Node</button>
+        <button data-action="sync" title="Execute Git → PHP → Node operations in sequence">Sync</button>
       </div>
-      <pre class="log" id="log-${cssEscape(proj.path)}"></pre>
     `;
 
     projectsEl.appendChild(card);
@@ -138,7 +145,16 @@ function renderProjects() {
         try {
           const branch = (settings.projects[proj.path] && settings.projects[proj.path].branch) || 'develop';
           const gitStrategy = (settings.projects[proj.path] && settings.projects[proj.path].gitStrategy) || 'pull';
-          await window.api.executeAction({ projectPath: proj.path, action: btn.dataset.action, branch, gitStrategy });
+          // Exécute l'action demandée
+          try {
+            console.log('Executing action:', { projectPath: proj.path, action: btn.dataset.action, branch, gitStrategy });
+            const result = await window.api.executeAction({ projectPath: proj.path, action: btn.dataset.action, branch, gitStrategy });
+            console.log('Action result:', result);
+            // Update versions after action that might change them
+            updateVersionsAfterAction();
+          } catch (error) {
+            console.error(`Error executing ${btn.dataset.action} action:`, error);
+          }
         } finally {
           btn.disabled = false;
         }
@@ -222,14 +238,59 @@ chooseBtn.addEventListener('click', async () => {
 });
 
 window.api.onLog(({ projectPath, message }) => {
-  const el = document.getElementById(`log-${cssEscape(projectPath)}`);
-  if (!el) return;
-  el.textContent += message;
-  el.scrollTop = el.scrollHeight;
+  console.log('Log received:', { projectPath, message });
   if (globalLogEl) {
     const prefix = projectPath ? `[${projectPath}] ` : '';
-    globalLogEl.textContent += prefix + message;
-    globalLogEl.scrollTop = globalLogEl.scrollHeight;
+    
+    // Create colored log entry
+    const logEntry = document.createElement('div');
+    logEntry.className = 'log-entry';
+    
+    // Add timestamp
+    const timestamp = new Date().toLocaleTimeString();
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'log-timestamp';
+    timeSpan.textContent = `[${timestamp}] `;
+    logEntry.appendChild(timeSpan);
+    
+    // Add project prefix if exists
+    if (projectPath) {
+      const projectSpan = document.createElement('span');
+      projectSpan.className = 'log-project';
+      projectSpan.textContent = `[${projectPath.split('/').pop()}] `;
+      logEntry.appendChild(projectSpan);
+    }
+    
+    // Add message with color coding
+    const messageSpan = document.createElement('span');
+    messageSpan.className = 'log-message';
+    
+    // Color code based on content
+    if (message.includes('$ git') || message.includes('$ npm') || message.includes('$ composer')) {
+      messageSpan.className += ' log-command';
+    } else if (message.includes('error') || message.includes('Error') || message.includes('failed')) {
+      messageSpan.className += ' log-error';
+    } else if (message.includes('Warning') || message.includes('warning')) {
+      messageSpan.className += ' log-warning';
+    } else if (message.includes('DONE') || message.includes('success')) {
+      messageSpan.className += ' log-success';
+    } else if (message.includes('npm info') || message.includes('composer')) {
+      messageSpan.className += ' log-info';
+    }
+    
+    messageSpan.textContent = message;
+    logEntry.appendChild(messageSpan);
+    
+    globalLogEl.appendChild(logEntry);
+    
+    // Force scroll to bottom with a small delay to ensure DOM update
+    setTimeout(() => {
+      globalLogEl.scrollTop = globalLogEl.scrollHeight;
+    }, 10);
+    
+    console.log('Added to global log:', prefix + message);
+  } else {
+    console.log('Global log element not found');
   }
 });
 
@@ -242,7 +303,6 @@ async function loadSettings() {
   // Thème
   const theme = settings.theme || 'system';
   applyTheme(theme);
-  if (themePicker) themePicker.value = theme;
 
   // Base dir + projets
   if (settings.baseDir) {
@@ -291,15 +351,93 @@ async function populateBranches(projectPath, selectEl) {
 
 // Exécute les actions groupées sur les projets inclus
 runSelectedBtn.addEventListener('click', async () => {
+	// Vérifier que les éléments existent
+	if (!bulkGitEl || !bulkPhpEl || !bulkNodeEl || !stopProcessBtn) {
+		console.error('Required elements not found');
+		return;
+	}
+	
 	const doGit = bulkGitEl.checked;
 	const doPhp = bulkPhpEl.checked;
 	const doNode = bulkNodeEl.checked;
-	for (const proj of projectList) {
+	
+	// Collecter les projets sélectionnés
+	const selectedProjects = projectList.filter(proj => {
 		const cfg = settings.projects[proj.path] || { include: true, branch: 'develop', gitStrategy: 'pull' };
-		if (!cfg.include) continue;
-		if (doGit) await window.api.executeAction({ projectPath: proj.path, action: 'git', branch: cfg.branch, gitStrategy: cfg.gitStrategy });
-		if (doPhp && proj.techs.includes('php')) await window.api.executeAction({ projectPath: proj.path, action: 'php', branch: cfg.branch, gitStrategy: cfg.gitStrategy });
-		if (doNode && proj.techs.some(t => t === 'node' || t === 'ts')) await window.api.executeAction({ projectPath: proj.path, action: 'node', branch: cfg.branch, gitStrategy: cfg.gitStrategy });
+		return cfg.include;
+	});
+	
+	if (selectedProjects.length === 0) {
+		alert('Please select at least one project');
+		return;
+	}
+	
+	console.log('Running bulk actions on', selectedProjects.length, 'projects');
+	
+	// Afficher le bouton stop et désactiver le bouton run
+	runSelectedBtn.style.display = 'none';
+	stopProcessBtn.style.display = 'inline-block';
+	
+	// Variable pour contrôler l'arrêt du processus
+	let shouldStop = false;
+	
+	// Créer un listener unique pour ce processus
+	const stopListener = () => {
+		shouldStop = true;
+		console.log('Process stop requested');
+	};
+	
+	// Ajouter l'écouteur d'événement
+	stopProcessBtn.addEventListener('click', stopListener);
+	
+	try {
+		for (const proj of selectedProjects) {
+			// Vérifier si l'arrêt a été demandé
+			if (shouldStop) {
+				console.log('Process stopped by user');
+				break;
+			}
+			
+			const cfg = settings.projects[proj.path] || { include: true, branch: 'develop', gitStrategy: 'pull' };
+			
+			// Exécuter les actions selon les checkboxes
+			if (doGit) {
+				if (shouldStop) break;
+				await window.api.executeAction({ projectPath: proj.path, action: 'git', branch: cfg.branch, gitStrategy: cfg.gitStrategy });
+			}
+			if (doPhp && proj.techs.includes('php')) {
+				if (shouldStop) break;
+				await window.api.executeAction({ projectPath: proj.path, action: 'php', branch: cfg.branch, gitStrategy: cfg.gitStrategy });
+			}
+			if (doNode && proj.techs.some(t => t === 'node' || t === 'ts')) {
+				if (shouldStop) break;
+				await window.api.executeAction({ projectPath: proj.path, action: 'node', branch: cfg.branch, gitStrategy: cfg.gitStrategy });
+			}
+			
+			// Désélectionner le projet après l'action (même si arrêté)
+			settings.projects[proj.path] = settings.projects[proj.path] || {};
+			settings.projects[proj.path].include = false;
+			
+			// Update versions after actions that might change them
+			updateVersionsAfterAction();
+		}
+	} finally {
+		// Restaurer l'interface
+		runSelectedBtn.style.display = 'inline-block';
+		stopProcessBtn.style.display = 'none';
+		
+		// Retirer l'écouteur d'événement
+		stopProcessBtn.removeEventListener('click', stopListener);
+		
+		// Sauvegarder les paramètres et re-rendre
+		saveSettings();
+		renderProjects();
+		
+		if (shouldStop) {
+			console.log('Process stopped - projects deselected');
+		} else {
+			console.log('All projects completed and deselected');
+		}
 	}
 });
 
@@ -323,5 +461,103 @@ clearSelectionBtn.addEventListener('click', () => {
   renderProjects();
 });
 
+// Console controls
+if (toggleConsoleBtn) {
+  toggleConsoleBtn.addEventListener('click', () => {
+    const consoleEl = document.querySelector('.console');
+    if (consoleEl) {
+      consoleEl.classList.toggle('hidden');
+      const isHidden = consoleEl.classList.contains('hidden');
+      
+      // Update main padding
+      const mainEl = document.querySelector('main');
+      if (mainEl) {
+        mainEl.className = mainEl.className.replace(/pb-\d+/g, '');
+        if (!isHidden) {
+          mainEl.className += ' pb-96';
+        }
+      }
+      
+      // Update icon in header
+      const icon = toggleConsoleBtn.querySelector('svg');
+      if (icon) {
+        if (isHidden) {
+          icon.innerHTML = '<path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>'; // Code icon
+          toggleConsoleBtn.title = 'Show console';
+        } else {
+          icon.innerHTML = '<path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>'; // Code icon (same for now)
+          toggleConsoleBtn.title = 'Hide console';
+        }
+      }
+      
+      console.log('Console toggled:', isHidden ? 'hidden' : 'visible');
+    }
+  });
+}
+
+if (clearConsoleBtn) {
+  clearConsoleBtn.addEventListener('click', () => {
+    if (globalLogEl) {
+      globalLogEl.innerHTML = '';
+      console.log('Console cleared');
+    }
+  });
+}
+
+if (scrollToBottomBtn) {
+  scrollToBottomBtn.addEventListener('click', () => {
+    if (globalLogEl) {
+      globalLogEl.scrollTop = globalLogEl.scrollHeight;
+      console.log('Scrolled to bottom');
+    }
+  });
+}
+
 // --- BOOT ----------------------------------------------------------------
 loadSettings();
+
+
+
+// Get current PHP version
+async function getPhpVersion() {
+	try {
+		const response = await window.api.getPhpVersion();
+		if (response.ok) {
+			return response.version;
+		}
+		return '--';
+	} catch (e) {
+		return '--';
+	}
+}
+
+// Get current Node version
+async function getNodeVersion() {
+	try {
+		const response = await window.api.getNodeVersion();
+		if (response.ok) {
+			return response.version;
+		}
+		return '--';
+	} catch (e) {
+		return '--';
+	}
+}
+
+// Update version displays
+async function updateVersions() {
+	const phpVer = await getPhpVersion();
+	const nodeVer = await getNodeVersion();
+	
+	if (phpVersionEl) phpVersionEl.textContent = phpVer;
+	if (nodeVersionEl) nodeVersionEl.textContent = nodeVer;
+}
+
+// Update versions after actions that might change versions
+async function updateVersionsAfterAction() {
+	// Wait a bit for version changes to take effect
+	setTimeout(updateVersions, 1000);
+}
+
+// Initialize versions on load
+updateVersions();

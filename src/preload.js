@@ -8,16 +8,26 @@ contextBridge.exposeInMainWorld('api', {
 	scanProjects: (baseDir) => ipcRenderer.invoke('scan-projects', baseDir),
 	// Exécute une action: 'git' | 'php' | 'node' | 'sync' (avec branche optionnelle)
 	executeAction: (payload) => ipcRenderer.invoke('execute-action', payload),
-	// Récupère la configuration persistée
+	// Config
 	getConfig: () => ipcRenderer.invoke('get-config'),
-	// Sauvegarde la configuration persistée
-	saveConfig: (next) => ipcRenderer.invoke('save-config', next),
+	saveConfig: (config) => ipcRenderer.invoke('save-config', config),
+	
+	// Versions
+	getPhpVersion: () => ipcRenderer.invoke('get-php-version'),
+	getNodeVersion: () => ipcRenderer.invoke('get-node-version'),
+	
+	// Test
+	testLog: () => ipcRenderer.invoke('test-log'),
+	
+	// Logging
+	onLog: (callback) => {
+		ipcRenderer.on('log', (_event, data) => {
+			console.log('Preload received log:', data);
+			callback(data);
+		});
+	},
 	// Liste les branches Git disponibles pour un projet
 	getBranches: (projectPath) => ipcRenderer.invoke('get-branches', projectPath),
-	// Ecoute le flux de logs (stdout/stderr) émis par le main
-	onLog: (callback) => {
-		ipcRenderer.on('log-update', (_event, data) => callback(data));
-	}
 });
 
 

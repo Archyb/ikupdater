@@ -22,12 +22,23 @@
 
 /* ===== Components ===== */
 @layer components {
-	.app-header { @apply flex items-center gap-4 px-8 py-6 border-b border-gray-200 bg-white dark:bg-slate-900 dark:border-slate-700; }
-	.brand-title { @apply text-2xl font-bold mr-4; color: var(--brand); }
+	.app-header { @apply flex items-center justify-between px-6 py-4 bg-white/70 dark:bg-slate-900/60 backdrop-blur border-b border-slate-200/70 dark:border-slate-800; }
+	.brand-title { @apply text-2xl font-bold text-[#0098ff] tracking-tight; }
+	.version-info { @apply flex items-center gap-4 text-sm; }
+	.version-item { @apply flex items-center gap-2; }
+	.version-label { @apply font-medium text-slate-600 dark:text-slate-400; }
+	.version-value { @apply font-mono text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-xs; }
+	
+	/* Theme select */
+	.theme-select { @apply px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 text-sm; }
+	
+	/* Header button */
+	.header-btn { @apply p-2 rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors duration-200 text-gray-600 dark:text-gray-400; }
 	.btn { @apply px-4 py-3 rounded-lg border shadow-sm bg-white text-gray-700 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700 hover:shadow-md transition-all duration-200; }
 	.muted { @apply opacity-60 text-sm text-gray-500; }
 	.controls { @apply px-8 py-4 border-b bg-gray-50 dark:bg-slate-900 border-gray-200 dark:border-slate-700; }
 	.control-row { @apply flex items-center gap-6; }
+	.label { @apply text-sm font-medium text-gray-700 dark:text-slate-300; }
 	/* Avoid @apply grid to prevent circular dependency in Tailwind */
 	.grid { display: grid; @apply gap-6; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); }
 	.card { @apply border rounded-2xl overflow-hidden bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all duration-300; }
@@ -39,11 +50,31 @@
 	.branch { @apply w-44 px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100; }
 	.git-strategy { @apply w-32 px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100; }
 	.log { @apply m-0 p-4 h-48 overflow-auto bg-gray-50 dark:bg-slate-900 text-gray-800 dark:text-indigo-100 font-mono text-sm border-t border-gray-200 dark:border-slate-700; }
-	.console { @apply px-8 py-4; }
-	.console h2 { @apply m-0 mb-3 text-base font-medium text-gray-600; }
+	.console { @apply fixed bottom-0 left-0 right-0 h-80 bg-gray-50 dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 z-40 shadow-lg transition-transform duration-300; }
+	.console.hidden { @apply transform translate-y-full; }
+	.console-header { @apply px-6 py-3 font-semibold text-sm border-b border-gray-200 dark:border-slate-700 flex items-center justify-between; }
+	.console-controls { @apply flex items-center gap-2; }
+	.console-btn { @apply p-2 rounded-lg bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors duration-200 text-gray-600 dark:text-gray-300; }
+	#globalLog { @apply p-4 h-64 overflow-y-auto font-mono text-sm text-gray-900 dark:text-gray-100 leading-tight; }
+	
+	/* Log entry styling */
+	.log-entry { @apply mb-1 p-1 rounded bg-white dark:bg-slate-800 border-l-4 border-transparent; }
+	.log-timestamp { @apply text-gray-500 dark:text-gray-400 font-mono; }
+	.log-project { @apply text-blue-600 dark:text-blue-400 font-semibold; }
+	.log-message { @apply text-gray-700 dark:text-gray-300; }
+	
+	/* Log color coding */
+	.log-entry .log-command { @apply text-purple-600 dark:text-purple-400 font-semibold; }
+	.log-entry .log-error { @apply text-red-600 dark:text-red-400 font-semibold; }
+	.log-entry .log-warning { @apply text-yellow-600 dark:text-yellow-400 font-semibold; }
+	.log-entry .log-success { @apply text-green-600 dark:text-green-400 font-semibold; }
+	.log-entry .log-info { @apply text-blue-600 dark:text-blue-400; }
 
 	/* Emphasize Sync and colorize actions */
 	.card-actions button[data-action='sync'] { @apply bg-blue-500 text-white border-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:border-blue-600 dark:hover:bg-blue-700; }
+	
+	/* Danger button */
+	.btn-danger { @apply bg-red-500 text-white border-red-500 hover:bg-red-600 dark:bg-red-600 dark:border-red-600 dark:hover:bg-red-700; }
 	.card-actions button[data-action='git'] { @apply border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/20 px-2 py-1 text-sm; }
 	.card-actions button[data-action='php'] { @apply border-purple-400 text-purple-600 hover:bg-purple-50 dark:border-purple-400 dark:text-purple-400 dark:hover:bg-purple-900/20 px-2 py-1 text-sm; }
 	.card-actions button[data-action='node'] { @apply border-green-400 text-green-600 hover:bg-green-50 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20 px-2 py-1 text-sm; }

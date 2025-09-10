@@ -21,6 +21,10 @@ An Electron application for managing and synchronizing development projects with
 - **PHP Projects**: 
   - Runs `composer install --ignore-platform-reqs`
   - **PHP version check**: Minimum 7.3 required (skips if version < 7.3)
+  - **Automatic PHP version switching**: Detects `.php-version`, `.tool-versions`, or `php-version` files and automatically switches PHP versions using:
+    - **phpenv** (primary): `phpenv local` + `phpenv version-name`
+    - **asdf** (alternative): `asdf local php` + `asdf current php`
+    - **phpbrew** (alternative): `phpbrew use`
 - **Node/TypeScript Projects**:
   - Automatically detects `yarn.lock` vs `package-lock.json`
   - Runs `npm install --loglevel info` or `yarn install --verbose`
@@ -59,6 +63,10 @@ An Electron application for managing and synchronizing development projects with
 - **npm** or **yarn** package manager
 - **nvm** (Node Version Manager) installed in `$HOME/.nvm` for `.nvmrc` support
 - **PHP** ≥ 7.3 (for Composer operations)
+- **PHP Version Manager** (one of the following for automatic version switching):
+  - **phpenv** (recommended): `brew install phpenv`
+  - **asdf**: `brew install asdf`
+  - **phpbrew**: `curl -L -O https://github.com/phpbrew/phpbrew/releases/latest/download/phpbrew.phar && chmod +x phpbrew.phar && sudo mv phpbrew.phar /usr/local/bin/phpbrew`
 - **Git** with SSH access configured
 - **Composer** (for PHP projects)
 
@@ -110,8 +118,29 @@ Generated in `dist/` directory:
 ### Action Details
 - **Git**: Fetches latest changes and updates to selected branch
 - **PHP**: Installs Composer dependencies (if PHP ≥ 7.3)
+  - **Automatic version switching**: If `.php-version`, `.tool-versions`, or `php-version` file is present, automatically switches to the specified PHP version
 - **Node**: Installs npm/yarn dependencies with NVM version management
 - **Sync**: Executes Git → PHP → Node sequence for complete project update
+
+### PHP Version Configuration
+To enable automatic PHP version switching, create one of these files in your PHP project root:
+
+**`.php-version` (phpenv):**
+```
+8.1.0
+```
+
+**`.tool-versions` (asdf):**
+```
+php 8.1.0
+```
+
+**`php-version` (phpbrew):**
+```
+8.1.0
+```
+
+The application will automatically detect these files and switch to the specified PHP version before running Composer.
 
 ### Monitoring
 - **Per-project logs**: Real-time output displayed below each project card

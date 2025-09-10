@@ -7,6 +7,8 @@ const { spawnCapture, runCommandSequence } = require('./exec');
 const { loadConfig, saveConfig, getConfig } = require('./config');
 const { getBranches } = require('./git');
 
+
+
 /** @type {BrowserWindow | null} */
 let mainWindow = null;
 
@@ -45,7 +47,9 @@ app.whenReady().then(() => {
 
 function sendLog(projectPath, message) {
 	if (mainWindow) {
-		mainWindow.webContents.send('log-update', { projectPath, message });
+		mainWindow.webContents.send('log', { projectPath, message });
+	} else {
+		console.log('No mainWindow available');
 	}
 }
 
@@ -111,6 +115,31 @@ ipcMain.handle('save-config', async (_event, next) => {
 	return { ok: true };
 });
 
+// Version endpoints
+ipcMain.handle('get-php-version', async () => {
+	try {
+		const version = (await spawnCapture('php', ['-r', 'echo PHP_VERSION;'], process.cwd())).trim();
+		return { ok: true, version };
+	} catch (e) {
+		return { ok: false, error: 'PHP not available' };
+	}
+});
+
+// Test log endpoint
+ipcMain.handle('test-log', async () => {
+	sendLog('/test/path', 'TEST: This is a test log message from main process\n');
+	return { ok: true };
+});
+
+ipcMain.handle('get-node-version', async () => {
+	try {
+		const version = (await spawnCapture('node', ['--version'], process.cwd())).trim();
+		return { ok: true, version };
+	} catch (e) {
+		return { ok: false, error: 'Node.js not available' };
+	}
+});
+
 ipcMain.handle('execute-action', async (_event, { projectPath, action, branch, gitStrategy }) => {
 	if (!projectPath || !action) return { ok: false, error: 'invalid-args' };
 	const sequence = [];
@@ -154,6 +183,29 @@ ipcMain.handle('execute-action', async (_event, { projectPath, action, branch, g
 	if (action === 'php' || action === 'sync') {
 		const hasComposer = fs.existsSync(path.join(projectPath, 'composer.json'));
 		if (hasComposer) {
+			// Check for PHP version file (.php-version, .tool-versions, or .php-version)
+			const hasPhpVersion = fs.existsSync(path.join(projectPath, '.php-version')) || 
+								 fs.existsSync(path.join(projectPath, '.tool-versions')) ||
+								 fs.existsSync(path.join(projectPath, 'php-version'));
+			
+			if (hasPhpVersion) {
+				// Try to use phpenv, asdf, or phpbrew to switch PHP version
+				const phpVersionCmd = `export PATH="$HOME/.phpenv/bin:$PATH"; 
+									  export PATH="$HOME/.asdf/shims:$PATH"; 
+									  export PATH="$HOME/.phpbrew/bin:$PATH"; 
+									  if command -v phpenv >/dev/null 2>&1; then
+									    phpenv local && phpenv version-name
+									  elif command -v asdf >/dev/null 2>&1; then
+									    asdf local php && asdf current php
+									  elif command -v phpbrew >/dev/null 2>&1; then
+									    phpbrew use
+									  else
+									    echo "No PHP version manager found (phpenv, asdf, or phpbrew)"
+									  fi`;
+				
+				sequence.push({ cmd: 'bash', args: ['-lc', phpVersionCmd] });
+			}
+			
 			// Check PHP version >= 7.3 before running composer
 			try {
 				const phpVer = (await spawnCapture('php', ['-r', 'echo PHP_VERSION;'], projectPath)).trim();
@@ -164,8 +216,7 @@ ipcMain.handle('execute-action', async (_event, { projectPath, action, branch, g
 					sequence.push({ cmd: 'composer', args: ['install', '--ignore-platform-reqs'] });
 				}
 			} catch (e) {
-				sendLog(projectPath, `Unable to check PHP version (${e.message}). Trying Composer anyway...`);
-				sequence.push({ cmd: 'composer', args: ['install', '--ignore-platform-reqs'] });
+				sendLog(projectPath, `PHP not available or error: ${e.message}. Skipping Composer.`);
 			}
 		} else if (action === 'php') {
 			sendLog(projectPath, 'composer.json not found, skipping PHP');
