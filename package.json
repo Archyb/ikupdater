@@ -2,6 +2,10 @@
   "name": "ikdev-updater",
   "version": "0.1.0",
   "description": "Electron app to update multiple dev projects (git/composer/npm|yarn)",
+  "author": {
+    "name": "IkDev",
+    "email": "contact@ikdev.com"
+  },
   "main": "dist/main/main.js",
   "scripts": {
     "dev": "npm run build && ELECTRON_DISABLE_SECURITY_WARNINGS=1 electron .",
@@ -38,8 +42,21 @@
       ],
       "category": "public.app-category.developer-tools"
     },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Development"
+    },
     "dmg": {
       "artifactName": "${productName}-${version}-${arch}.dmg"
+    },
+    "deb": {
+      "artifactName": "${productName}-${version}-${arch}.deb"
+    },
+    "appImage": {
+      "artifactName": "${productName}-${version}-${arch}.AppImage"
     },
     "directories": {
       "output": "dist"

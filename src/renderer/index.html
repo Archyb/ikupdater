@@ -9,40 +9,114 @@
   </head>
   <body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased">
     <!-- Header -->
-    <header class="app-header sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/70 supports-[backdrop-filter]:dark:bg-slate-900/60 border-b border-slate-200/70 dark:border-slate-800">
-      <div class="flex items-center gap-4">
-        <h1 id="appTitle" class="brand-title tracking-tight">IkDevUpdater</h1>
-        <div class="version-info">
-          <span class="version-item" title="Current PHP version">
-            <span class="version-label">PHP:</span>
-            <span class="version-value" id="php-version">--</span>
-          </span>
-          <span class="version-item" title="Current Node.js version">
-            <span class="version-label">Node:</span>
-            <span class="version-value" id="node-version">--</span>
-          </span>
+    <header class="app-header sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/90 supports-[backdrop-filter]:dark:bg-slate-900/90 border-b border-slate-200/60 dark:border-slate-800/60 shadow-lg">
+      <!-- Animated gradient overlay -->
+      <div class="absolute inset-0 bg-gradient-to-r from-blue-50/40 via-purple-50/20 to-pink-50/40 dark:from-blue-950/30 dark:via-purple-950/20 dark:to-pink-950/30 pointer-events-none"></div>
+      <div class="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent dark:via-white/10 pointer-events-none"></div>
+      
+      <!-- Floating particles effect -->
+      <div class="particles-container absolute inset-0 pointer-events-none overflow-hidden">
+        <div class="particle particle-1"></div>
+        <div class="particle particle-2"></div>
+        <div class="particle particle-3"></div>
+        <div class="particle particle-4"></div>
+      </div>
+      
+      <!-- First row: Brand and Controls -->
+      <div class="relative flex items-center justify-between w-full px-8 py-4">
+        <!-- Brand section with enhanced effects -->
+        <div class="brand-container group">
+          <h1 id="appTitle" class="brand-title tracking-tight relative">
+            <span class="brand-text">IkDevUpdater</span>
+            <div class="brand-glow"></div>
+            <div class="brand-shine"></div>
+          </h1>
+          <div class="brand-subtitle">Development Tools</div>
+          <div class="brand-underline"></div>
+        </div>
+
+        <!-- Right section: Enhanced Controls -->
+        <div class="flex items-center gap-4">
+          <!-- Ultra magnificent folder chooser -->
+          <button id="chooseFolder" class="folder-chooser" title="Select the base directory containing your development projects">
+            <div class="folder-chooser-content">
+              <div class="folder-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                </svg>
+                <div class="folder-icon-glow"></div>
+              </div>
+              <div class="folder-text">
+                <span class="folder-label">Choose Folder</span>
+                <span class="folder-subtitle">Select workspace</span>
+              </div>
+              <div class="folder-arrow">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </div>
+            </div>
+            <div class="folder-glow"></div>
+            <div class="folder-ripple"></div>
+          </button>
+          
+          <!-- Enhanced theme picker section -->
+          <div class="theme-picker flex items-center gap-3">
+            <button id="toggleConsole" class="header-btn enhanced" title="Toggle console visibility">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+              </svg>
+            </button>
+            <div class="theme-selector">
+              <select id="themePicker" class="theme-select enhanced" title="Choose theme">
+                <option value="dark">🌙 Dark</option>
+                <option value="light">☀️ Light</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="ml-auto flex items-center gap-2">
-        <button id="chooseFolder" class="btn btn-ghost" title="Select the base directory containing your development projects">Choose projects folder</button>
-        <span id="baseDir" class="muted truncate max-w-[40ch]"></span>
-        <div class="theme-picker">
-          <button id="toggleConsole" class="header-btn" title="Toggle console visibility">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <!-- Second row: Version info and Path display -->
+      <div class="relative flex items-center justify-between w-full px-8 py-3 border-t border-slate-200/40 dark:border-slate-700/40">
+        <!-- Enhanced version info -->
+        <div class="version-info flex items-center gap-4">
+          <div class="version-item" title="Current PHP version">
+            <div class="version-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+            </div>
+            <span class="version-label">PHP</span>
+            <span class="version-value" id="php-version">--</span>
+            <div class="version-pulse"></div>
+          </div>
+          <div class="version-item" title="Current Node.js version">
+            <div class="version-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+            </div>
+            <span class="version-label">Node</span>
+            <span class="version-value" id="node-version">--</span>
+            <div class="version-pulse"></div>
+          </div>
+        </div>
+
+        <!-- Enhanced path display -->
+        <div class="path-display flex-1 max-w-3xl mx-6">
+          <div class="path-container">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="path-icon">
               <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
             </svg>
-          </button>
-          <select id="themePicker" class="theme-select" title="Choose theme">
-            <option value="dark">🌙</option>
-            <option value="light">☀️</option>
-          </select>
+            <span id="baseDir" class="path-text truncate" title="Current base directory"></span>
+          </div>
         </div>
       </div>
     </header>
 
     <!-- Bulk Actions Toolbar - Sticky -->
-    <section class="controls sticky top-16 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur border-b border-gray-200 dark:border-slate-700 shadow-sm">
+    <section class="controls sticky top-24 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur border-b border-gray-200 dark:border-slate-700 shadow-sm">
       <div class="control-row justify-between flex-wrap gap-4">
         <div class="flex items-center gap-2 flex-wrap">
           <span class="label">Bulk actions</span>
